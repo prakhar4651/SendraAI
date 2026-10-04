@@ -34,7 +34,7 @@ def _get_diff_and_files(args: argparse.Namespace) -> tuple[str, list[str]]:
         if not path.exists():
             print(f"File not found: {args.file}", file=sys.stderr)
             sys.exit(1)
-        return path.read_text(), []
+        return path.read_text(encoding="utf-8", errors="replace"), []
 
     if args.branch:
         diff = _run_git("diff", f"{args.branch}...HEAD")
@@ -45,6 +45,9 @@ def _get_diff_and_files(args: argparse.Namespace) -> tuple[str, list[str]]:
     elif args.unstaged:
         diff = _run_git("diff")
         files = _run_git("diff", "--name-only").splitlines()
+    elif not sys.stdin.isatty():
+        diff = sys.stdin.read()
+        files = []
     else:
         # Default: staged changes
         diff = _run_git("diff", "--cached")

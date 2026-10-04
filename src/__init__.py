@@ -1,10 +1,7 @@
-"""SendraAI core package.
-
-Public API:
-    run_review(code_diff, file_paths) -> str
-"""
+"""SendraAI core package."""
 
 from src.main import run_review
+from src.graph import build_graph
 
 __version__ = "0.1.0"
-__all__ = ["run_review", "__version__"]
+__all__ = ["run_review", "build_graph", "__version__"]
