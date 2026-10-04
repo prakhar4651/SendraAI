@@ -1,18 +1,40 @@
-# Environment
+# Environment & Secrets
 .env
+.env.local
+*.env
 
 # Logs
 logs/
+*.log
+
+# Diffs & Patches
+*.diff
+*.patch
 
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
 dist/
 build/
 .venv/
 venv/
+ENV/
+env/
 
-# IDE
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & Editor
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# OS Artifacts
+.DS_Store
+Thumbs.db
+

@@ -11,10 +11,29 @@ Scoring:
   Final score is reported as X/N cases passed.
 """
 
+import os
+import pathlib
 import sys
+
+# Standard Windows SSL / certificate inspection workaround
+os.environ["PYTHONHTTPSVERIFY"] = "0"
+try:
+    import certifi
+    os.environ["SSL_CERT_FILE"] = certifi.where()
+except Exception:
+    pass
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 from dotenv import load_dotenv
 
+_PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent
+load_dotenv(_PROJECT_ROOT / ".env")
 load_dotenv()
 
 from evals.cases import CASES

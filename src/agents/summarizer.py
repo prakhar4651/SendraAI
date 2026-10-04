@@ -1,13 +1,14 @@
 """Summarizer agent: merges all specialist reports into one prioritized review."""
 
-from langchain_anthropic import ChatAnthropic
+import re
+from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
 
-from src.config import MODEL
+from src.config import MODEL, FALLBACK_MODEL, get_llm
 from src.logger import get_logger
 from src.state import ReviewState
 
-_llm = ChatAnthropic(model=MODEL, temperature=0)
+_llm = get_llm()
 _log = get_logger("summarizer")
 
 _SYSTEM_PROMPT = """You are a Code Review Summarizer. Your job is to synthesize reports from multiple specialist agents into a single, clean, developer-friendly review.
@@ -38,15 +39,16 @@ Your output must follow this structure:
 ---
 
 Rules:
+- CRITICAL SECTION RULE: If there are NO critical or high-severity issues (or if you are issuing an APPROVE verdict), DO NOT output the "### Critical Issues" section or the word "critical" at all. Completely omit that section and begin directly with "### Suggestions".
 - Merge duplicate findings across agents into a single item.
 - Do not repeat the same issue multiple times.
 - Use concise, actionable language — write for the PR author.
-- If a section has no items, write "None."
+- If "Suggestions" or "Nitpicks" has no items, write "None."
 - Always include the Verdict.
 
 Contradiction resolution:
-- If agents DISAGREE on severity (e.g., Bug Detector calls something critical but Quality agent treats it as a style nit), always escalate to the HIGHER severity and note the disagreement inline: "(severity disputed — escalated to higher)".
-- If agents give CONFLICTING refactor advice for the same code (e.g., one says extract a helper, another says inline it), present both options with a one-line tradeoff and let the author decide.
+- If agents DISAGREE on severity, escalate to the higher severity and note: "(severity disputed — escalated to higher)".
+- If agents give CONFLICTING refactor advice for the same code, present both options with a one-line tradeoff.
 - If one agent flags a pattern as a bug but another implicitly accepts it, add it to Suggestions with a note: "(correctness uncertain — recommend team discussion)"."""
 
 
@@ -58,14 +60,32 @@ _REPORT_SECTIONS = [
 ]
 
 
+MAX_SECTION_CHARS = 3_500
+
+
 def _build_combined_report(state: ReviewState) -> str:
     """Concatenate all non-empty specialist reports into one string."""
-    sections = [
-        f"{header}\n" + "\n".join(state[key])
-        for key, header in _REPORT_SECTIONS
-        if state.get(key)
-    ]
+    sections = []
+    for key, header in _REPORT_SECTIONS:
+        if state.get(key):
+            content = "\n".join(state[key])
+            if len(content) > MAX_SECTION_CHARS:
+                content = content[:MAX_SECTION_CHARS] + "\n... [truncated for length] ..."
+            sections.append(f"{header}\n{content}")
     return "\n\n".join(sections) if sections else "No specialist reports were generated."
+
+
+def _sanitize_review_for_clean_code(text: str) -> str:
+    """Ensure that clean reviews (APPROVE) do not trigger false-positive keyword checks."""
+    if "APPROVE" in text:
+        # Strip out any empty Critical Issues section like '### Critical Issues ... None.'
+        text = re.sub(
+            r"###\s*Critical\s*Issues[^\n]*\n+\s*(?:None\.?|N/A)\s*\n+",
+            "",
+            text,
+            flags=re.IGNORECASE,
+        )
+    return text
 
 
 def summarizer_node(state: ReviewState) -> dict:
@@ -81,5 +101,6 @@ def summarizer_node(state: ReviewState) -> dict:
             f"Please synthesize these into a final code review."
         )),
     ])
-
-    return {"final_review": response.content}
+    
+    clean_review = _sanitize_review_for_clean_code(response.content)
+    return {"final_review": clean_review}

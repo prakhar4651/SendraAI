@@ -1,13 +1,13 @@
 """Code Quality agent: reviews readability, style, and maintainability."""
 
-from langchain_anthropic import ChatAnthropic
+from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
 
-from src.config import MODEL
+from src.config import MODEL, FALLBACK_MODEL, get_llm
 from src.logger import get_logger
 from src.state import ReviewState
 
-_llm = ChatAnthropic(model=MODEL, temperature=0)
+_llm = get_llm()
 _log = get_logger("code_quality")
 
 _SYSTEM_PROMPT = """You are a Code Quality agent specializing in maintainability and readability.

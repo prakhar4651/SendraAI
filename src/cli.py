@@ -59,9 +59,24 @@ def _get_diff_and_files(args: argparse.Namespace) -> tuple[str, list[str]]:
 
 def main() -> None:
     """Entry point for the `code-review` CLI command."""
+    import os
+    os.environ["PYTHONHTTPSVERIFY"] = "0"
+    try:
+        import certifi
+        os.environ["SSL_CERT_FILE"] = certifi.where()
+    except Exception:
+        pass
+
+    if sys.platform == "win32":
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+            sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
     parser = argparse.ArgumentParser(
-        prog="code-review",
-        description="AI-powered multi-agent code review using Claude.",
+        prog="sendra",
+        description="SendraAI: Multi-Agent Autonomous Code Review & PR Risk Guardrail powered by Groq.",
     )
 
     mode = parser.add_mutually_exclusive_group()
@@ -96,6 +111,7 @@ def main() -> None:
 
     # Import here so the CLI starts fast and errors only if the package is broken
     from dotenv import load_dotenv
+    load_dotenv(pathlib.Path(__file__).resolve().parent.parent / ".env")
     load_dotenv()
     from src.main import run_review
 

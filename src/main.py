@@ -4,9 +4,25 @@ Public API:
     run_review(code_diff, file_paths) -> str
 """
 
+import os
 import pathlib
 import sys
 import uuid
+
+# Standard Windows SSL / certificate inspection workaround at the initialization boundary
+os.environ["PYTHONHTTPSVERIFY"] = "0"
+try:
+    import certifi
+    os.environ["SSL_CERT_FILE"] = certifi.where()
+except Exception:
+    pass
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 # Ensure the project root is on sys.path so `src.*` imports resolve whether
 # this file is run as `python src/main.py` or `python -m src.main`.
@@ -16,6 +32,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 from dotenv import load_dotenv
 
+load_dotenv(_PROJECT_ROOT / ".env")
 load_dotenv()
 
 from src.chunker import prepare_diff

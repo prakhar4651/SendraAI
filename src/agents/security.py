@@ -1,13 +1,13 @@
 """Security agent: scans a code diff for vulnerabilities."""
 
-from langchain_anthropic import ChatAnthropic
+from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
 
-from src.config import MODEL
+from src.config import MODEL, FALLBACK_MODEL, get_llm
 from src.logger import get_logger
 from src.state import ReviewState
 
-_llm = ChatAnthropic(model=MODEL, temperature=0)
+_llm = get_llm()
 _log = get_logger("security")
 
 _SYSTEM_PROMPT = """You are a Security Review agent specializing in identifying vulnerabilities.

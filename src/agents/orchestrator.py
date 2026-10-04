@@ -3,14 +3,14 @@
 import json
 import re
 
-from langchain_anthropic import ChatAnthropic
+from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
 
-from src.config import MODEL
+from src.config import MODEL, FALLBACK_MODEL, get_llm
 from src.logger import get_logger
 from src.state import ReviewState
 
-_llm = ChatAnthropic(model=MODEL, temperature=0)
+_llm = get_llm()
 _log = get_logger("orchestrator")
 
 _SYSTEM_PROMPT = """You are an orchestrator for a multi-agent code review system.
@@ -30,11 +30,12 @@ Rules:
 - Activate test_coverage when test files are present OR when new logic is added without tests.
 - You may activate all four agents when in doubt.
 
-Respond ONLY with a JSON object in this exact format:
+Respond ONLY with a JSON object in this exact schema:
 {
   "active_agents": ["bug_detector", "security", "code_quality", "test_coverage"],
   "reasoning": "brief explanation of routing decisions"
-}"""
+}
+Do not include any other text before or after the JSON."""
 
 
 def orchestrator_node(state: ReviewState) -> dict:
@@ -52,15 +53,23 @@ def orchestrator_node(state: ReviewState) -> dict:
     text = response.content
     # Extract JSON from the response
     match = re.search(r"\{.*\}", text, re.DOTALL)
+    data = {}
     if match:
-        data = json.loads(match.group())
-    else:
+        try:
+            data = json.loads(match.group())
+        except Exception:
+            data = {}
+
+    if not data or "active_agents" not in data:
         # Fallback: activate all agents
         data = {"active_agents": ["bug_detector", "security", "code_quality", "test_coverage"]}
 
     active = [a for a in data.get("active_agents", []) if a in {
         "bug_detector", "security", "code_quality", "test_coverage"
     }]
+
+    if not active:
+        active = ["bug_detector", "security", "code_quality", "test_coverage"]
 
     _log.info("Routing to agents: %s", active)
     if "reasoning" in data:
