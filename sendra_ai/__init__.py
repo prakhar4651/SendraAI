@@ -1,4 +1,4 @@
-"""SendraAI core package.
+"""SendraAI: Multi-Agent Autonomous Code Review & PR Risk Guardrail.
 
 Public API:
     run_review(code_diff, file_paths) -> str

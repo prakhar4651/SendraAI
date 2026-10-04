@@ -1,0 +1,19 @@
+include LICENSE
+include README.md
+include requirements.txt
+include pyproject.toml
+
+recursive-include sendra_ai *.py
+recursive-include src *.py
+recursive-include code_review *.py
+
+exclude .env*
+exclude *.env
+recursive-exclude * .env*
+recursive-exclude logs *
+recursive-exclude * *.log
+recursive-exclude * *.diff
+recursive-exclude * *.patch
+recursive-exclude evals *
+recursive-exclude examples *
+recursive-exclude tests *

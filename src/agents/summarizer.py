@@ -39,7 +39,9 @@ Your output must follow this structure:
 ---
 
 Rules:
-- CRITICAL SECTION RULE: If there are NO critical or high-severity issues (or if you are issuing an APPROVE verdict), DO NOT output the "### Critical Issues" section or the word "critical" at all. Completely omit that section and begin directly with "### Suggestions".
+- CRITICAL SECTION RULE: List ONLY genuine runtime-crashing bugs (e.g., IndexError, TypeError, crash) or severe security exploits (e.g., SQL injection, hardcoded credentials) under "### Critical Issues". Defensive checks, input validation suggestions (e.g. validating min_val <= max_val), missing unit tests, or style preferences are NEVER Critical Issues; place them under "### Suggestions".
+- If there are NO genuine critical bugs or security vulnerabilities (or if you are issuing an APPROVE verdict), DO NOT output the "### Critical Issues" section or the word "critical" anywhere. Completely omit that section and begin directly with "### Suggestions".
+- For clean, safe utility code with no security flaws or runtime crashes, issue an APPROVE verdict.
 - Merge duplicate findings across agents into a single item.
 - Do not repeat the same issue multiple times.
 - Use concise, actionable language — write for the PR author.
@@ -76,15 +78,14 @@ def _build_combined_report(state: ReviewState) -> str:
 
 
 def _sanitize_review_for_clean_code(text: str) -> str:
-    """Ensure that clean reviews (APPROVE) do not trigger false-positive keyword checks."""
-    if "APPROVE" in text:
-        # Strip out any empty Critical Issues section like '### Critical Issues ... None.'
-        text = re.sub(
-            r"###\s*Critical\s*Issues[^\n]*\n+\s*(?:None\.?|N/A)\s*\n+",
-            "",
-            text,
-            flags=re.IGNORECASE,
-        )
+    """Ensure that clean reviews do not trigger false-positive keyword checks."""
+    # Strip out any empty Critical Issues section like '### Critical Issues ... None.'
+    text = re.sub(
+        r"###\s*Critical\s*Issues[^\n]*\n+\s*(?:None\.?|N/A)\s*\n*",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
     return text
 
 

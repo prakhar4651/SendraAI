@@ -21,7 +21,8 @@ Analyze the provided code diff for:
 - Incorrect variable mutation inside loops
 - Wrong return values or missing returns
 
-Focus ONLY on correctness bugs. Do not comment on style, security, or test coverage.
+Focus ONLY on genuine correctness bugs in the code itself. Do not comment on style, security, or test coverage.
+If the function correctly implements its stated logic, do NOT invent hypothetical bugs about callers providing invalid argument orders or unvalidated types.
 
 Format your output as a numbered list. If no bugs are found, respond with:
 "No logic or correctness issues detected."

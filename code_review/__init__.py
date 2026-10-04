@@ -1,10 +1,9 @@
-"""SendraAI: Multi-Agent Autonomous Code Review & PR Risk Guardrail.
+"""SendraAI (backwards compatibility alias for code_review).
 
-Public API:
-    run_review(code_diff, file_paths) -> str
+Prefer:
+    from sendra_ai import run_review
 """
 
-from src.main import run_review
+from sendra_ai import run_review, __version__
 
-__version__ = "0.1.0"
-__all__ = ["run_review"]
+__all__ = ["run_review", "__version__"]

@@ -1,17 +1,19 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "sendra-ai"
 version = "0.1.0"
-description = "SendraAI: Multi-Agent Autonomous Code Review & PR Risk Guardrail"
+description = "Multi-agent autonomous code review & PR risk guardrail powered by LangGraph and Groq LPUs"
 readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.10"
 dependencies = [
     "langchain-groq>=0.1.0",
     "langgraph>=0.2.0",
     "langchain-core>=0.3.0",
+    "pydantic>=2.7.0",
     "python-dotenv>=1.0.0",
     "certifi>=2024.0.0",
 ]
@@ -23,5 +25,7 @@ code-review = "src.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["src*", "evals*", "examples*", "code_review*"]
+include = ["sendra_ai*", "src*", "code_review*"]
+exclude = ["evals*", "examples*"]
+
 

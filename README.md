@@ -190,7 +190,7 @@ sendra --file patch.diff --output review.md
 You can integrate SendraAI directly into your Python scripts, dev tools, or bots:
 
 ```python
-from src.main import run_review
+from sendra_ai import run_review
 
 diff_text = """
 diff --git a/app.py b/app.py
